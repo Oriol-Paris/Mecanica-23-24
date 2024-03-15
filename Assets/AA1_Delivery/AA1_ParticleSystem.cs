@@ -193,13 +193,18 @@ public class AA1_ParticleSystem
 
         p.alive = true;
         p.timeAlive = 0.0f;
+        p.size = 0.05f;
 
         //Particle Life
         Random rng = new Random();
         p.life = settingsCascade.minPartLife + ((float)rng.NextDouble()) * (settingsCascade.maxPartLife - settingsCascade.minPartLife);
 
         //Particle Starting Position
-        p.position = settingsCascade.PointA + (new Vector3C((float)rng.NextDouble(), (float)rng.NextDouble(), (float)rng.NextDouble())) * (settingsCascade.PointB - settingsCascade.PointA);
+        Vector3C cascade = settingsCascade.PointB - settingsCascade.PointA;
+        p.position.x = settingsCascade.PointA.x + (float)rng.NextDouble() * (settingsCascade.PointB.x - settingsCascade.PointA.x);
+        p.position.y = cascade.y;
+        p.position.z = settingsCascade.PointA.z + (cascade.z/cascade.x) * (p.position.x - settingsCascade.PointA.x);
+        
 
         //Particle Starting Acceleration
         p.acceleration = 
@@ -220,6 +225,7 @@ public class AA1_ParticleSystem
 
         p.alive = true;
         p.timeAlive = 0.0f;
+        p.size = 0.05f;
 
         //Particle Life
         Random rng = new Random();
@@ -243,9 +249,9 @@ public class AA1_ParticleSystem
 
     public void CheckCollisions(Particle particle)
     {
-        foreach(PlaneC plane in settingsCollision.planes) //
+        foreach(PlaneC plane in settingsCollision.planes)
         {
-            if(plane.DistanceToPoint(particle.position) <= particle.size)
+            if(plane.DistanceToPoint(particle.position) <= particle.size + 0.1f)
             {
                 particle.position = plane.NearestPoint(particle.position);
                 particle.Collision(plane, settings.bounce);
