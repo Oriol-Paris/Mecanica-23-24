@@ -50,6 +50,13 @@ public struct PlaneC
     {
         return new Vector3C();
     }
+
+    public float DistanceToPoint(Vector3C point)
+    {
+        float num = normal.x * point.x + normal.y * point.y + normal.z * point.z + distance;
+        float denom = MathF.Sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+        return num / denom;
+    }
     public override bool Equals(object obj)
     {
         if(obj is PlaneC)

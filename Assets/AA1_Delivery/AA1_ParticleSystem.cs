@@ -86,6 +86,8 @@ public class AA1_ParticleSystem
         public Vector3C velocity;
         public float life;
         public float size;
+        public float timeAlive;
+        public bool alive;
 
         public void AddForce(Vector3C force)
         {
@@ -125,9 +127,11 @@ public class AA1_ParticleSystem
     float simCannonTimer = 0.0f;
     bool particlesCreated = false;
     Particle[] particles = null;
+    int particleToSpawn = 0;
 
     public Particle[] Update(float dt)
     {
+        //Setup
         if(!particlesCreated)
         {
             particles = new Particle[settings.particlePool];
@@ -137,20 +141,38 @@ public class AA1_ParticleSystem
         simCascadeTimer += dt;
         simCannonTimer += dt;
 
+
         //Spawn Particles
-        if(simCascadeTimer >= settingsCascade.PartPerSecond)
+        if(simCascadeTimer >= 1.0f / settingsCascade.PartPerSecond)
         {
-            SetUpCascadeParticle();
+            particles[particleToSpawn] = SetUpCascadeParticle();
+            particleToSpawn++;
+            particleToSpawn %= 100;
+            simCascadeTimer = 0.0f;
         }
-        if(simCannonTimer>= settingsCannon.PartPerSecond)
+        if(simCannonTimer >= 1.0f / settingsCannon.PartPerSecond)
         {
-            SetUpConeParticle();
+            particles[particleToSpawn] = SetUpConeParticle();
+            particleToSpawn++;
+            particleToSpawn %= 100;
+            simCannonTimer = 0.0f;
         }
 
         //Update Particles
-        foreach (Particle p in particles)
+        for (int i = particles.Length - 1; i >= 0; i--)
         {
-            p.UpdatePosition(dt);
+            if (particles[i].alive)
+            {
+                particles[i].timeAlive += dt;
+
+                if (particles[i].timeAlive >= particles[i].life)
+                    particles[i].alive = false;
+                else
+                    particles[i].UpdatePosition(dt);
+            }
+
+            if (!particles[i].alive)
+                particleToSpawn = i;
         }
 
         //Check Collisions
@@ -162,9 +184,15 @@ public class AA1_ParticleSystem
         return particles;
     }
 
+
+
+
     public Particle SetUpCascadeParticle()
     {
         Particle p = new Particle();
+
+        p.alive = true;
+        p.timeAlive = 0.0f;
 
         //Particle Life
         Random rng = new Random();
@@ -190,12 +218,15 @@ public class AA1_ParticleSystem
     {
         Particle p = new Particle();
 
+        p.alive = true;
+        p.timeAlive = 0.0f;
+
         //Particle Life
         Random rng = new Random();
         p.life = settingsCannon.minPartLife + ((float)rng.NextDouble()) * (settingsCannon.maxPartLife - settingsCannon.minPartLife);
 
         //Particle Starting Position
-        p.position = settingsCannon.Start + (new Vector3C((float)rng.NextDouble(), (float)rng.NextDouble(), (float)rng.NextDouble())) * ((settingsCannon.Start + settingsCannon.Direction) - settingsCannon.Start);
+        p.position = settingsCannon.Start;
 
         //Particle Starting Acceleration
         p.acceleration =
@@ -214,7 +245,11 @@ public class AA1_ParticleSystem
     {
         foreach(PlaneC plane in settingsCollision.planes) //
         {
-
+            if(plane.DistanceToPoint(particle.position) <= particle.size)
+            {
+                particle.position = plane.NearestPoint(particle.position);
+                particle.Collision(plane, settings.bounce);
+            }
         }
         foreach (SphereC sphere in settingsCollision.spheres)
         {

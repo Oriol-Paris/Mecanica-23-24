@@ -159,21 +159,32 @@ MonoBehaviour:
   cascadeB: {fileID: 2040244667}
   system:
     settings:
+      particlePool: 100
       gravity:
         x: 0
-        y: 0
+        y: -9.8
         z: 0
-      bounce: 0
+      bounce: 2
     settingsCascade:
       PointA:
-        x: 0
+        x: -0.5
         y: 0
-        z: 0
+        z: 0.5
       PointB:
-        x: 0
+        x: 0.5
         y: 0
+        z: -0.5
+      Direction:
+        x: 0.3
+        y: 0.1
         z: 0
-      particlesPerSecond: 0
+      randomDirection: 0
+      minForce: 0
+      maxForce: 0
+      minPartPerSecond: 50
+      maxPartPerSecond: 100
+      minPartLife: 5
+      maxPartLife: 10
     settingsCannon:
       Start:
         x: 0
@@ -184,7 +195,12 @@ MonoBehaviour:
         y: 0
         z: 0
       angle: 0
-      particlesPerSecond: 0
+      minForce: 0
+      maxForce: 0
+      minPartPerSecond: 0
+      maxPartPerSecond: 0
+      minPartLife: 0
+      maxPartLife: 0
     settingsCollision:
       planes:
       - position:
