@@ -121,18 +121,30 @@ public class AA1_ParticleSystem
     }
 
     Random rnd = new Random();
-    float simTimer = 0.0f;
+    float simCascadeTimer = 0.0f;
+    float simCannonTimer = 0.0f;
+    bool particlesCreated = false;
+    Particle[] particles = null;
 
     public Particle[] Update(float dt)
     {
-        Particle[] particles = new Particle[settings.particlePool];
+        if(!particlesCreated)
+        {
+            particles = new Particle[settings.particlePool];
+            particlesCreated = true;
+        }
 
-        simTimer += dt;
+        simCascadeTimer += dt;
+        simCannonTimer += dt;
 
         //Spawn Particles
-        if(simTimer >= settingsCascade.PartPerSecond)
+        if(simCascadeTimer >= settingsCascade.PartPerSecond)
         {
-
+            SetUpCascadeParticle();
+        }
+        if(simCannonTimer>= settingsCannon.PartPerSecond)
+        {
+            SetUpConeParticle();
         }
 
         //Update Particles
