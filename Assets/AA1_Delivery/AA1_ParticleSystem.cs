@@ -1,7 +1,5 @@
 using System;
 using System.Drawing;
-using UnityEditor.ShaderGraph;
-using UnityEngine.UIElements;
 
 [System.Serializable]
 public class AA1_ParticleSystem
@@ -102,13 +100,10 @@ public class AA1_ParticleSystem
 
         public void Collision(PlaneC plane, float bounceFactor)
         {
-            Vector3C vn =
-                plane.normal * 
-                ((velocity.x * plane.normal.x) + (velocity.y * plane.normal.y) + (velocity.z * plane.normal.z))
-                / (plane.normal.magnitude * plane.normal.magnitude);
-
-            velocity = velocity - vn * 2;
-            velocity *= bounceFactor;
+            Vector3C vn = plane.normal.normalized * (Vector3C.Dot(this.velocity, plane.normal) / plane.normal.magnitude);
+            Vector3C vt = this.velocity - vn;
+            this.velocity = -vn + vt;
+            this.velocity *= bounceFactor;
         }
         public void Collision(SphereC sphere, float bounceFactor)
         {
@@ -169,21 +164,16 @@ public class AA1_ParticleSystem
                     particles[i].alive = false;
                 else
                     particles[i].UpdatePosition(dt);
+
+                particles[i] = CheckCollisions(particles[i]);
             }
 
             if (!particles[i].alive)
                 particleToSpawn = i;
         }
 
-        //Check Collisions
-        foreach (Particle p in particles)
-        {
-            CheckCollisions(p);
-        }
-
         return particles;
     }
-
 
 
 
@@ -229,32 +219,34 @@ public class AA1_ParticleSystem
 
         //Particle Life
         Random rng = new Random();
-        p.life = settingsCannon.minPartLife + ((float)rng.NextDouble()) * (settingsCannon.maxPartLife - settingsCannon.minPartLife);
+        p.life = settingsCascade.minPartLife + ((float)rng.NextDouble()) * (settingsCascade.maxPartLife - settingsCascade.minPartLife);
 
         //Particle Starting Position
         p.position = settingsCannon.Start;
 
         //Particle Starting Acceleration
         p.acceleration =
-            new Vector3C(settingsCannon.minForce, settingsCannon.minForce, settingsCannon.minForce) * settingsCannon.Direction
+            new Vector3C(settingsCascade.minForce, settingsCascade.minForce, settingsCascade.minForce) * settingsCascade.Direction
             + new Vector3C(((float)rng.NextDouble()), ((float)rng.NextDouble()), ((float)rng.NextDouble()))
-            * (settingsCannon.maxForce - settingsCannon.minForce);
+            * (settingsCascade.maxForce - settingsCascade.minForce);
         p.AddForce(settings.gravity);
 
         //Particle Starting Velocity
-
+        p.velocity = settingsCascade.Direction.normalized;
 
         return p;
     }
 
-    public void CheckCollisions(Particle particle)
+    public Particle CheckCollisions(Particle particle)
     {
         foreach(PlaneC plane in settingsCollision.planes)
         {
-            if(plane.DistanceToPoint(particle.position) <= particle.size + 0.1f)
+            if(plane.DistanceToPoint(particle.position) <= particle.size)
             {
-                particle.position = plane.NearestPoint(particle.position);
+                particle.position = plane.NearestPoint(particle.position) + plane.normal.normalized * 0.1f;
+
                 particle.Collision(plane, settings.bounce);
+
             }
         }
         foreach (SphereC sphere in settingsCollision.spheres)
@@ -273,6 +265,8 @@ public class AA1_ParticleSystem
                 particle.Collision(capsule, settings.bounce);
             }
         }
+
+        return particle;
     }
 
     public void Debug()

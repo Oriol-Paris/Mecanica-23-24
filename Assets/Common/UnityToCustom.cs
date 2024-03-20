@@ -44,11 +44,10 @@ public static class UnityToCustom
     {
         return new Ray(v.origin.ToUnity(), v.direction.ToUnity());
     }
-
-    /*public static PlaneC ToCustom(this Plane v)
+    public static PlaneC ToCustom(this Plane v)
     {
-        return new PlaneC(v.normal.ToCustom(), v.normal);
-    }*/
+        return new PlaneC(v.normal.ToCustom(), v.distance);
+    }
     public static Plane ToUnity(this PlaneC v)
     {
         return new Plane(v.position.ToUnity(), v.normal.ToUnity());

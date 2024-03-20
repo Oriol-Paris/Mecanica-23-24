@@ -46,10 +46,6 @@ public struct PlaneC
         float num = Vector3C.Dot(normal, point) + distance;
         return point - normal * num;
     }
-    public Vector3C Intersection(LineC line) //
-    {
-        return new Vector3C();
-    }
 
     public float DistanceToPoint(Vector3C point)
     {
