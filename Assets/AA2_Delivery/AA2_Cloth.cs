@@ -23,8 +23,10 @@ public class AA2_Cloth
     [System.Serializable]
     public struct ClothSettings
     {
-        public float elasticCoef;
+        public float structuralElasticCoef;
         public float damptCoef;
+
+        public float structuralSpring;
     }
     public ClothSettings clothSettings;
 
@@ -36,24 +38,35 @@ public class AA2_Cloth
     public SettingsCollision settingsCollision;
     public struct Vertex
     {
-        public Vector3C lastPosition;
         public Vector3C actualPosition;
         public Vector3C velocity;
         public Vertex(Vector3C _position)
         {
             this.actualPosition = _position;
-            this.lastPosition = _position;
             this.velocity = new Vector3C(0, 0, 0);
+        }
+
+        public void Euler(Vector3C force, float dt)
+        {
+            velocity += force * dt;
+            actualPosition += velocity * dt;
         }
     }
     public Vertex[] points;
     public void Update(float dt)
     {
         System.Random rnd = new System.Random();
-        for (int i = 0; i < points.Length; i++)
+        int xVertex = settings.xPartSize + 1;
+
+        for (int i = settings.xPartSize + 1; i < points.Length; i++)
         {
-            points[i].actualPosition = points[i].lastPosition;
-            points[i].actualPosition.y = rnd.Next(100) * 0.01f;
+            float moduleY = (points[i - xVertex].actualPosition - points[i].actualPosition).magnitude - clothSettings.structuralSpring;
+            Vector3C forceVector = (points[i - xVertex].actualPosition - points[i].actualPosition).normalized * moduleY;
+
+            Vector3C dampingForce = (points[i].velocity - points[i - xVertex].velocity) * clothSettings.damptCoef;
+            Vector3C structuralSpringForce = forceVector * clothSettings.structuralElasticCoef - dampingForce;
+
+            points[i].Euler(settings.gravity + structuralSpringForce, dt);
         }
     }
 
@@ -64,7 +77,6 @@ public class AA2_Cloth
         if (points != null)
             foreach (var item in points)
             {
-                item.lastPosition.Print(0.05f);
                 item.actualPosition.Print(0.05f);
             }
     }

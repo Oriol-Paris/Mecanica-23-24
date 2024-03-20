@@ -12,7 +12,7 @@ public struct PlaneC
     public Vector3C right { get { return new Vector3C(); } } //
     public Vector3C up { get { return new Vector3C(); } } //
     public Vector3C forward { get { return new Vector3C(); } } //
-    public float distance { get { return 0f - Vector3C.Dot(normal, position); } }
+    public float distance { get { return 0f - Vector3C.Dot(normal, position); } set { } }
     #endregion
 
     #region CONSTRUCTORS
@@ -21,15 +21,15 @@ public struct PlaneC
         this.position = position;
         this.normal = normal;
     }
-    public PlaneC(Vector3C a, Vector3C b, Vector3C c) //
-    {
-        this.position = new Vector3C();
-        this.normal = new Vector3C();
-    }
     public PlaneC(float a, float b, float c, float d) //
     {
         this.position = new Vector3C();
-        this.normal = new Vector3C();
+        this.normal = new Vector3C(a, b, c);
+    }
+    public PlaneC(Vector3C normal, float distance) //
+    {
+        this.normal = normal;
+        this.position = new Vector3C();
     }
     #endregion
 
