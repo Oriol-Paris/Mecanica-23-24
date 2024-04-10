@@ -94,8 +94,6 @@ public class AA2_Cloth
 
                 structuralForces[i] += structuralForceVectorY;
                 structuralForces[i - xVertices] -= structuralForceVectorY;
-
-                continue;
             }
 
             //Structural Hor
