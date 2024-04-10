@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -23,10 +24,20 @@ public class AA2_Cloth
     [System.Serializable]
     public struct ClothSettings
     {
+        [Header("Structural Spring")]
         public float structuralElasticCoef;
-        public float damptCoef;
+        public float structuralDamptCoef;
+        public float structuralSpringL;
 
-        public float structuralSpring;
+        [Header("Shear Spring")]
+        public float shearElasticCoef;
+        public float shearDamptCoef;
+        public float shearSpringL;
+
+        [Header("Bending Spring")]
+        public float bendingElasticCoef;
+        public float bendingDamptCoef;
+        public float bendingSpringL;
     }
     public ClothSettings clothSettings;
 
@@ -38,35 +49,83 @@ public class AA2_Cloth
     public SettingsCollision settingsCollision;
     public struct Vertex
     {
+        public Vector3C lastPosition;
         public Vector3C actualPosition;
         public Vector3C velocity;
         public Vertex(Vector3C _position)
         {
             this.actualPosition = _position;
+            this.lastPosition = _position;
             this.velocity = new Vector3C(0, 0, 0);
         }
 
-        public void Euler(Vector3C force, float dt)
-        {
+        public void Euler(Vector3C force, float dt) {
+            lastPosition = actualPosition;
             velocity += force * dt;
             actualPosition += velocity * dt;
         }
     }
     public Vertex[] points;
+
     public void Update(float dt)
     {
-        System.Random rnd = new System.Random();
-        int xVertex = settings.xPartSize + 1;
+        //System.Random rnd = new System.Random();
+        int xVertices = settings.xPartSize + 1;
+        int yVertices = settings.yPartSize + 1;
 
-        for (int i = settings.xPartSize + 1; i < points.Length; i++)
+        Vector3C[] structuralForces = new Vector3C[points.Length];
+        
+        for (int i = 0; i < points.Length; i++)
         {
-            float moduleY = (points[i - xVertex].actualPosition - points[i].actualPosition).magnitude - clothSettings.structuralSpring;
-            Vector3C forceVector = (points[i - xVertex].actualPosition - points[i].actualPosition).normalized * moduleY;
+            //if (i < xVertices) continue;
 
-            Vector3C dampingForce = (points[i].velocity - points[i - xVertex].velocity) * clothSettings.damptCoef;
-            Vector3C structuralSpringForce = forceVector * clothSettings.structuralElasticCoef - dampingForce;
+            //Structural Ver
+            if (i >= xVertices)
+            {
+                float structuralMagnitudeY = (points[i - xVertices].actualPosition - points[i].actualPosition).magnitude
+                - clothSettings.structuralSpringL;
 
-            points[i].Euler(settings.gravity + structuralSpringForce, dt);
+                //Fuerza de amortiguamiento
+                Vector3C damptingForce = (points[i].velocity - points[i - xVertices].velocity)
+                    * clothSettings.structuralDamptCoef;
+
+                Vector3C structuralForceVectorY = (points[i - xVertices].actualPosition - points[i].actualPosition).normalized
+                    * (structuralMagnitudeY * clothSettings.structuralElasticCoef) - damptingForce;
+
+                structuralForces[i] += structuralForceVectorY;
+                structuralForces[i - xVertices] -= structuralForceVectorY;
+
+                continue;
+            }
+
+            //Structural Hor
+            if (i % xVertices != 0)
+            {
+                float structuralMagnitudeX = (points[i - 1].actualPosition - points[i].actualPosition).magnitude
+                    - clothSettings.structuralSpringL;
+
+                //Fuerza de amortiguamiento
+                Vector3C damptingForce = (points[i].velocity - points[i - 1].velocity)
+                * clothSettings.structuralDamptCoef;
+
+                Vector3C structuralForceVectorX = (points[i - 1].actualPosition - points[i].actualPosition).normalized
+                    * structuralMagnitudeX * clothSettings.structuralElasticCoef - damptingForce;
+
+                structuralForces[i] += structuralForceVectorX;
+                structuralForces[i - 1] -= structuralForceVectorX;
+            }
+
+
+        }
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (i > 0 && i < xVertices - 1)
+            {
+                points[i].Euler(settings.gravity + structuralForces[i], dt);
+                continue;
+            }
+            if (i < xVertices) continue;
+            points[i].Euler(settings.gravity + structuralForces[i], dt);
         }
     }
 
@@ -77,6 +136,7 @@ public class AA2_Cloth
         if (points != null)
             foreach (var item in points)
             {
+                item.lastPosition.Print(0.05f);
                 item.actualPosition.Print(0.05f);
             }
     }
