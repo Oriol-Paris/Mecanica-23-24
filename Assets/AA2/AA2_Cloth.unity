@@ -234,10 +234,10 @@ MonoBehaviour:
       structuralElasticCoef: 130
       structuralDamptCoef: 0.8
       structuralSpringL: 1
-      shearElasticCoef: 100
+      shearElasticCoef: 40
       shearDamptCoef: 0.8
       shearSpringL: 1.5
-      bendingElasticCoef: 100
+      bendingElasticCoef: 20
       bendingDamptCoef: 0.8
       bendingSpringL: 2
     settingsCollision:
@@ -245,7 +245,7 @@ MonoBehaviour:
         position:
           x: 0
           y: -4
-          z: 0
+          z: -2
         radius: 3
 --- !u!1 &975883024
 GameObject:
