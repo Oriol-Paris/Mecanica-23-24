@@ -24,12 +24,11 @@ public struct SphereC
     #endregion
 
     #region METHODS
-    public bool IsInside(Vector3C point) //
+    public bool IsInside(Vector3C point)
     {
-        Vector3C v = new Vector3C(position, point);
-        float d = v.magnitude;
+        Vector3C v = new Vector3C(point, position);
 
-        return d < radius;
+        return v.magnitude < radius;
     }
     public override bool Equals(object obj)
     {

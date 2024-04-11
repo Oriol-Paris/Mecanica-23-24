@@ -17,7 +17,7 @@ public class AA2_Rigidbody
     public SettingsCollision settingsCollision;
 
 
-
+    [System.Serializable]
     public struct CubeRigidbody
     {
         public Vector3C position;

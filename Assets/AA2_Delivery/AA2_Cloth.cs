@@ -1,8 +1,10 @@
 using System;
 using System.Data;
+using System.Drawing;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static AA1_ParticleSystem;
 
 [System.Serializable]
 public class AA2_Cloth
@@ -69,23 +71,41 @@ public class AA2_Cloth
 
     public void Update(float dt)
     {
-        //System.Random rnd = new System.Random();
         int xVertices = settings.xPartSize + 1;
-        int yVertices = settings.yPartSize + 1;
 
-        Vector3C[] structuralForces = new Vector3C[points.Length];
-        
+        Vector3C[] structuralForces = CalculateStructuralForces();
+        Vector3C[] shearForces = CalculateShearForces();
+        Vector3C[] bendingForces = CalculateBendingForces();
+
         for (int i = 0; i < points.Length; i++)
         {
-            //if (i < xVertices) continue;
+            if (i > 0 && i < xVertices - 1)
+            {
+                points[i].Euler(settings.gravity + structuralForces[i] + shearForces[i] + bendingForces[i], dt);
+                continue;
+            }
+            if (i < xVertices) continue;
+            points[i].Euler(settings.gravity + structuralForces[i] + shearForces[i] + bendingForces[i], dt);
+        }
 
+        CalculateColisions();
+    }
+
+    Vector3C[] CalculateStructuralForces()
+    {
+        int xVertices = settings.xPartSize + 1;
+        Vector3C[] structuralForces = new Vector3C[points.Length];
+
+        //Structural Forces
+        for (int i = 0; i < points.Length; i++)
+        {
             //Structural Ver
             if (i >= xVertices)
             {
                 float structuralMagnitudeY = (points[i - xVertices].actualPosition - points[i].actualPosition).magnitude
                 - clothSettings.structuralSpringL;
 
-                //Fuerza de amortiguamiento
+                //Damping Force
                 Vector3C damptingForce = (points[i].velocity - points[i - xVertices].velocity)
                     * clothSettings.structuralDamptCoef;
 
@@ -112,20 +132,118 @@ public class AA2_Cloth
                 structuralForces[i] += structuralForceVectorX;
                 structuralForces[i - 1] -= structuralForceVectorX;
             }
-
-
         }
+
+        return structuralForces;
+    }
+
+
+    Vector3C[] CalculateShearForces()
+    {
+        int xVertices = settings.xPartSize + 1;
+        Vector3C[] shearForces = new Vector3C[points.Length];
+
+        //Shear Forces
+        for (int i = 0; i < points.Length - xVertices; i++)
+        {
+            //Left to Right
+            if (i % xVertices != xVertices - 1)
+            {
+                float shearMagnitudeR = (points[i].actualPosition - points[i + xVertices + 1].actualPosition).magnitude
+                - clothSettings.shearSpringL;
+
+                //Damping Force
+                Vector3C damptingForce = (points[i + xVertices + 1].velocity - points[i].velocity)
+                    * clothSettings.shearDamptCoef;
+
+                Vector3C structuralForceR = (points[i].actualPosition - points[i + xVertices + 1].actualPosition).normalized
+                    * (shearMagnitudeR * clothSettings.shearElasticCoef) - damptingForce;
+
+                shearForces[i + xVertices + 1] += structuralForceR;
+                shearForces[i] -= structuralForceR;
+            }
+
+            //Right to Left
+            if (i % xVertices != 0)
+            {
+                float shearMagnitudeL = (points[i].actualPosition - points[i + xVertices - 1].actualPosition).magnitude
+                - clothSettings.shearSpringL;
+
+                //Damping Force
+                Vector3C damptingForce = (points[i + xVertices - 1].velocity - points[i].velocity)
+                    * clothSettings.shearDamptCoef;
+
+                Vector3C structuralForceL = (points[i].actualPosition - points[i + xVertices - 1].actualPosition).normalized
+                    * (shearMagnitudeL * clothSettings.shearElasticCoef) - damptingForce;
+
+                shearForces[i + xVertices - 1] += structuralForceL;
+                shearForces[i] -= structuralForceL;
+            }
+        }
+
+        return shearForces;
+    }
+
+
+    Vector3C[] CalculateBendingForces()
+    {
+        int xVertices = settings.xPartSize + 1;
+        Vector3C[] bendingForces = new Vector3C[points.Length];
+
+        //Bending Forces
         for (int i = 0; i < points.Length; i++)
         {
-            if (i > 0 && i < xVertices - 1)
+            //Vertical
+            if (i >= xVertices * 2)
             {
-                points[i].Euler(settings.gravity + structuralForces[i], dt);
-                continue;
+                float bendingMagnitudeY = (points[i - (2 * xVertices)].actualPosition - points[i].actualPosition).magnitude
+                - clothSettings.bendingSpringL;
+
+                Vector3C damptingForce = (points[i].velocity - points[i - (2 * xVertices)].velocity)
+                    * clothSettings.bendingDamptCoef;
+
+                Vector3C bendingForceVectorY = (points[i - (2 * xVertices)].actualPosition - points[i].actualPosition).normalized
+                    * (bendingMagnitudeY * clothSettings.bendingElasticCoef) - damptingForce;
+
+                bendingForces[i] += bendingForceVectorY;
+                bendingForces[i - xVertices] -= bendingForceVectorY;
             }
-            if (i < xVertices) continue;
-            points[i].Euler(settings.gravity + structuralForces[i], dt);
+
+            //Horizontal
+            if (i % xVertices > 2)
+            {
+                float bendingMagnitudeX = (points[i - 2].actualPosition - points[i].actualPosition).magnitude
+                    - clothSettings.bendingSpringL;
+
+                //Fuerza de amortiguamiento
+                Vector3C damptingForce = (points[i].velocity - points[i - 2].velocity)
+                * clothSettings.bendingDamptCoef;
+
+                Vector3C bendingForceVectorX = (points[i - 2].actualPosition - points[i].actualPosition).normalized
+                    * bendingMagnitudeX * clothSettings.bendingElasticCoef - damptingForce;
+
+                bendingForces[i] += bendingForceVectorX;
+                bendingForces[i - 2] -= bendingForceVectorX;
+            }
+        }
+
+        return bendingForces;
+    }
+
+
+    void CalculateColisions()
+    {
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (settingsCollision.sphere.IsInside(points[i].actualPosition))
+            {
+                points[i].actualPosition = (points[i].actualPosition - settingsCollision.sphere.position).normalized * settingsCollision.sphere.radius;
+
+                points[i].velocity = Vector3C.zero;
+            }
         }
     }
+
 
     public void Debug()
     {
