@@ -237,13 +237,12 @@ public class AA2_Cloth
         {
             if (settingsCollision.sphere.IsInside(points[i].actualPosition))
             {
-                points[i].actualPosition = (points[i].actualPosition - settingsCollision.sphere.position).normalized * settingsCollision.sphere.radius;
+                points[i].actualPosition = (points[i].actualPosition - settingsCollision.sphere.position).normalized * settingsCollision.sphere.radius + settingsCollision.sphere.position;
 
                 points[i].velocity = Vector3C.zero;
             }
         }
     }
-
 
     public void Debug()
     {
