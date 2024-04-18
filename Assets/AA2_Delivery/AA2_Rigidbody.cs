@@ -33,7 +33,7 @@ public class AA2_Rigidbody
     public CubeRigidbody crb = new CubeRigidbody(Vector3C.zero, new(.1f,.1f,.1f), Vector3C.zero);
     public void Update(float dt)
     {
-
+        
     }
 
     public void Debug()

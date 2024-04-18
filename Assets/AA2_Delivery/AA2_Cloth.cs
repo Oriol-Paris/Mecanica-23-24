@@ -40,6 +40,9 @@ public class AA2_Cloth
         public float bendingElasticCoef;
         public float bendingDamptCoef;
         public float bendingSpringL;
+
+        [Header("Tension Multiplier")]
+        public float multiplier;
     }
     public ClothSettings clothSettings;
 
@@ -95,6 +98,7 @@ public class AA2_Cloth
     {
         int xVertices = settings.xPartSize + 1;
         Vector3C[] structuralForces = new Vector3C[points.Length];
+        float maxStructuralSpringL = clothSettings.structuralSpringL * 1.5f;
 
         //Structural Forces
         for (int i = 0; i < points.Length; i++)
@@ -108,6 +112,11 @@ public class AA2_Cloth
                 //Damping Force
                 Vector3C damptingForce = (points[i].velocity - points[i - xVertices].velocity)
                     * clothSettings.structuralDamptCoef;
+
+                if ((points[i - xVertices].actualPosition - points[i].actualPosition).magnitude < maxStructuralSpringL)
+                {
+                    structuralMagnitudeY *= maxStructuralSpringL / (points[i - xVertices].actualPosition - points[i].actualPosition).magnitude * clothSettings.multiplier;
+                }
 
                 Vector3C structuralForceVectorY = (points[i - xVertices].actualPosition - points[i].actualPosition).normalized
                     * (structuralMagnitudeY * clothSettings.structuralElasticCoef) - damptingForce;
@@ -126,6 +135,11 @@ public class AA2_Cloth
                 Vector3C damptingForce = (points[i].velocity - points[i - 1].velocity)
                 * clothSettings.structuralDamptCoef;
 
+                if ((points[i - 1].actualPosition - points[i].actualPosition).magnitude < maxStructuralSpringL)
+                {
+                    structuralMagnitudeX *= maxStructuralSpringL / (points[i - 1].actualPosition - points[i].actualPosition).magnitude * clothSettings.multiplier;
+                }
+
                 Vector3C structuralForceVectorX = (points[i - 1].actualPosition - points[i].actualPosition).normalized
                     * structuralMagnitudeX * clothSettings.structuralElasticCoef - damptingForce;
 
@@ -142,6 +156,7 @@ public class AA2_Cloth
     {
         int xVertices = settings.xPartSize + 1;
         Vector3C[] shearForces = new Vector3C[points.Length];
+        float maxShearSpringL = clothSettings.shearSpringL * 1.5f;
 
         //Shear Forces
         for (int i = 0; i < points.Length - xVertices; i++)
@@ -156,11 +171,16 @@ public class AA2_Cloth
                 Vector3C damptingForce = (points[i + xVertices + 1].velocity - points[i].velocity)
                     * clothSettings.shearDamptCoef;
 
-                Vector3C structuralForceR = (points[i].actualPosition - points[i + xVertices + 1].actualPosition).normalized
+                if ((points[i + xVertices + 1].actualPosition - points[i].actualPosition).magnitude < maxShearSpringL)
+                {
+                    shearMagnitudeR *= maxShearSpringL / (points[i + xVertices + 1].actualPosition - points[i].actualPosition).magnitude * clothSettings.multiplier;
+                }
+
+                Vector3C shearForceR = (points[i].actualPosition - points[i + xVertices + 1].actualPosition).normalized
                     * (shearMagnitudeR * clothSettings.shearElasticCoef) - damptingForce;
 
-                shearForces[i + xVertices + 1] += structuralForceR;
-                shearForces[i] -= structuralForceR;
+                shearForces[i + xVertices + 1] += shearForceR;
+                shearForces[i] -= shearForceR;
             }
 
             //Right to Left
@@ -173,11 +193,16 @@ public class AA2_Cloth
                 Vector3C damptingForce = (points[i + xVertices - 1].velocity - points[i].velocity)
                     * clothSettings.shearDamptCoef;
 
-                Vector3C structuralForceL = (points[i].actualPosition - points[i + xVertices - 1].actualPosition).normalized
+                if ((points[i + xVertices - 1].actualPosition - points[i].actualPosition).magnitude < maxShearSpringL)
+                {
+                    shearMagnitudeL *= maxShearSpringL / (points[i + xVertices - 1].actualPosition - points[i].actualPosition).magnitude * clothSettings.multiplier;
+                }
+
+                Vector3C shearForceL = (points[i].actualPosition - points[i + xVertices - 1].actualPosition).normalized
                     * (shearMagnitudeL * clothSettings.shearElasticCoef) - damptingForce;
 
-                shearForces[i + xVertices - 1] += structuralForceL;
-                shearForces[i] -= structuralForceL;
+                shearForces[i + xVertices - 1] += shearForceL;
+                shearForces[i] -= shearForceL;
             }
         }
 
@@ -189,6 +214,7 @@ public class AA2_Cloth
     {
         int xVertices = settings.xPartSize + 1;
         Vector3C[] bendingForces = new Vector3C[points.Length];
+        float maxBendingSpringL = clothSettings.bendingSpringL * 1.5f;
 
         //Bending Forces
         for (int i = 0; i < points.Length; i++)
@@ -201,6 +227,11 @@ public class AA2_Cloth
 
                 Vector3C damptingForce = (points[i].velocity - points[i - (2 * xVertices)].velocity)
                     * clothSettings.bendingDamptCoef;
+
+                if ((points[i - (2 * xVertices)].actualPosition - points[i].actualPosition).magnitude < maxBendingSpringL)
+                {
+                    bendingMagnitudeY *= maxBendingSpringL / (points[i - (2 * xVertices)].actualPosition - points[i].actualPosition).magnitude * clothSettings.multiplier;
+                }
 
                 Vector3C bendingForceVectorY = (points[i - (2 * xVertices)].actualPosition - points[i].actualPosition).normalized
                     * (bendingMagnitudeY * clothSettings.bendingElasticCoef) - damptingForce;
@@ -218,6 +249,11 @@ public class AA2_Cloth
                 //Fuerza de amortiguamiento
                 Vector3C damptingForce = (points[i].velocity - points[i - 2].velocity)
                 * clothSettings.bendingDamptCoef;
+
+                if ((points[i - 2].actualPosition - points[i].actualPosition).magnitude < maxBendingSpringL)
+                {
+                    bendingMagnitudeX *= maxBendingSpringL / (points[i - 2].actualPosition - points[i].actualPosition).magnitude * clothSettings.multiplier;
+                }
 
                 Vector3C bendingForceVectorX = (points[i - 2].actualPosition - points[i].actualPosition).normalized
                     * bendingMagnitudeX * clothSettings.bendingElasticCoef - damptingForce;
