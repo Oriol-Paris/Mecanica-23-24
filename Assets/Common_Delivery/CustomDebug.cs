@@ -57,12 +57,12 @@ public static class CustomDebug
         Gizmos.color = tempColor;
 #endif
     }
-    /*public static void Print(this Plane obj, Vector3C color, float scale = 1)
+    public static void Print(this Plane obj, Vector3C color, float scale = 1)
     {
 #if UNITY_EDITOR
         obj.ToCustom().Print(color, scale);
 #endif
-    }*/
+    }
     public static void Print(this SphereC obj, Vector3C color)
     {
 #if UNITY_EDITOR

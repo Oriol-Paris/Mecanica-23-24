@@ -36,10 +36,6 @@ public struct CubeC
     {
         return new Vector3C();
     }
-    public Vector3C IntersectionWithLine(LineC line)
-    {
-        return new Vector3C();
-    }
     public override bool Equals(Object obj)
     {
         return false;
