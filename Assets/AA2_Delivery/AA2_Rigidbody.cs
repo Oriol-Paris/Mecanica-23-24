@@ -1,5 +1,4 @@
 using System;
-using UnityEngine.UIElements;
 
 [System.Serializable]
 public class AA2_Rigidbody
@@ -61,7 +60,7 @@ public class AA2_Rigidbody
             };
 
             linearVelocity = Vector3C.zero;
-            angularVelocity = Vector3C.zero;
+            angularVelocity = new Vector3C(10.0f, 0.0f, 0.0f);
             linearAcceleration = Vector3C.zero;
 
             accelerationInit = false;
@@ -86,7 +85,7 @@ public class AA2_Rigidbody
         {
             for (int i = 0; i < originalVertices.Length; ++i)
             {
-                rotatedVertices[i] = MatrixC.RotationToVector(euler, originalVertices[i]);
+                rotatedVertices[i] = MatrixC.RotationToVector(euler, originalVertices[i], position);
             }
         }
 

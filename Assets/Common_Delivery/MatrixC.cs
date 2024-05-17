@@ -34,7 +34,7 @@ public class MatrixC
     public MatrixC(float[,] nodes)
     {
         this.nodes = nodes;
-        matrixSize = (int)MathF.Sqrt(nodes.Length);
+        matrixSize = (int)Math.Sqrt(nodes.Length);
     }
     #endregion
 
@@ -125,11 +125,9 @@ public class MatrixC
     }
 
 
-    public static Vector3C RotationToVector(Vector3C euler, Vector3C point)
+    public static Vector3C RotationToVector(Vector3C euler, Vector3C point, Vector3C origin)
     {
-        Vector3C eulerinRadians = euler * (float)MathF.PI / 180;
-
-        return RotateX3x3(eulerinRadians.x) * (RotateY3x3(eulerinRadians.y) * RotateZ3x3(eulerinRadians.z)) * point;
+        return RotateX3x3(euler.x) * (RotateY3x3(euler.y) * RotateZ3x3(euler.z)) * point;
     }
     #endregion
 }
