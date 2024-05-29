@@ -6,6 +6,7 @@ public struct SphereC
     #region FIELDS
     public Vector3C position;
     public float radius;
+    public float volume { private set { } get { return (4.0f / 3.0f) * (float)Math.PI * radius * radius * radius; } }
     #endregion
 
     #region PROPIERTIES
