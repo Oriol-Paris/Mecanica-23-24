@@ -31,6 +31,11 @@ public struct SphereC
 
         return v.magnitude < radius;
     }
+
+    public bool IsBelowSphere(Vector3C point)
+    {
+        return point.y < position.y - radius;
+    }
     public override bool Equals(object obj)
     {
         if(obj is SphereC)

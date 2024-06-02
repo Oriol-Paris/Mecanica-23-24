@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 using static AA3_Waves;
-using static UnityEditor.Progress;
 
 [System.Serializable]
 public class AA3_Waves
@@ -51,28 +50,43 @@ public class AA3_Waves
         elapsedTime = 0.0f;
     }
 
-    private float CalculateWaveHeightAtBuoy(WavesSettings ws)
+    private float CalculateWaveHeightAtBuoy()
     {
-        float k = (float)(2.0f * Math.PI / ws.frequency);
-        return (float)(ws.amplitude * k * Math.Sin(k * (Vector3C.Dot(buoy.position, ws.direction) + elapsedTime * ws.speed) + ws.phase));
+        float height = 0.0f;
+
+        foreach(WavesSettings ws in wavesSettings)
+        {
+            float k = (float)(2.0f * Math.PI / ws.frequency);
+            height += (float)(ws.amplitude * k * Math.Sin(k * (Vector3C.Dot(buoy.position, ws.direction) + elapsedTime * ws.speed) + ws.phase));
+        }
+        return height;
     }
 
-    private float CalculateSubmergedVolume(WavesSettings ws)
+    private float CalculateSubmergedVolume(float waveHeight)
     {
-        float bottomHeight = buoy.position.y - buoy.radius;
-        float height = CalculateWaveHeightAtBuoy(ws) - bottomHeight;
-        return (((float)Math.PI * height * height) * 0.3333f) * 3.0f * (buoy.radius - height);
+        if(!buoy.IsBelowSphere(new Vector3C(buoy.position.x, waveHeight, buoy.position.z)))
+        {
+            float height = waveHeight - (buoy.position.y - buoy.radius);
+            return 1.0f / 3.0f * (float)Math.PI * height * height * (3.0f * buoy.radius - height);
+        }
+        return 0.0f;
     }
 
-    private float CalculateBuoyForce(WavesSettings ws)
+    private float CalculateBuoyForce(float waveHeight)
     {
-        float floatabilityForce = settings.density * settings.gravity * CalculateSubmergedVolume(ws) * buoySettings.buoyancyCoeficient;
-        return floatabilityForce - buoySettings.mass * settings.gravity;
+        if(CalculateSubmergedVolume(waveHeight) != 0.0f)
+        {
+            float floatabilityForce = settings.density * settings.gravity * CalculateSubmergedVolume(waveHeight) * buoySettings.buoyancyCoeficient;
+            return floatabilityForce - buoySettings.mass * settings.gravity;
+        }
+        else
+            return 0.0f;
     }
 
-    private void BuyoEuler(WavesSettings ws, float dt)
+    private void BuoyEuler(float waveHeight, float dt)
     {
-        buoySettings.buoyVelocity += CalculateBuoyForce(ws)/buoySettings.mass - settings.gravity * dt;
+        buoySettings.buoyVelocity += (CalculateBuoyForce(waveHeight) / buoySettings.mass + settings.gravity) * dt;
+
         buoy.position.y += buoySettings.buoyVelocity * dt;
     }
 
@@ -97,10 +111,10 @@ public class AA3_Waves
                     (float)(ws.amplitude * k * Math.Sin(k * (Vector3C.Dot(originalPos, ws.direction) + elapsedTime * ws.speed) + ws.phase)),
                     (float)(originalPos.z + ws.amplitude * k * Math.Cos(k * (Vector3C.Dot(originalPos, ws.direction) + elapsedTime * ws.speed) + ws.phase) * ws.direction.z)
                 );
-
-                BuyoEuler(ws, dt);
             }
         }
+
+        BuoyEuler(CalculateWaveHeightAtBuoy(), dt);
     }
 
     public void Debug()
