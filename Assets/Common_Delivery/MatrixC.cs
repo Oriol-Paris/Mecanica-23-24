@@ -125,9 +125,24 @@ public class MatrixC
     }
 
 
-    public static Vector3C RotationToVector(Vector3C euler, Vector3C point, Vector3C origin)
+    public static Vector3C RotationToVector(Vector3C euler, Vector3C point)
     {
-        return RotateX3x3(euler.x) * (RotateY3x3(euler.y) * RotateZ3x3(euler.z)) * point;
+        euler = euler * (float)MathF.PI / 180;
+
+        return new MatrixC(new float[,] {
+            { MathF.Cos(euler.y) * MathF.Cos(euler.z),
+              (MathF.Sin(euler.x) * MathF.Sin(euler.y) * MathF.Cos(euler.z)) - (MathF.Cos(euler.x) * MathF.Sin(euler.z)),
+              (MathF.Cos(euler.x) * MathF.Sin(euler.y) * MathF.Cos(euler.z)) + (MathF.Sin(euler.x) * MathF.Sin(euler.z))
+            },
+            { MathF.Cos(euler.y) * MathF.Sin(euler.z),
+              (MathF.Sin(euler.x) * MathF.Sin(euler.y) * MathF.Sin(euler.z)) + (MathF.Cos(euler.x) * MathF.Cos(euler.z)),
+              (MathF.Cos(euler.x) * MathF.Sin(euler.y) * MathF.Sin(euler.z)) - (MathF.Sin(euler.x) * MathF.Cos(euler.z))
+            },
+            { -1.0f * MathF.Sin(euler.y),
+              MathF.Sin(euler.x) * MathF.Cos(euler.y),
+              MathF.Cos(euler.x) * MathF.Cos(euler.y)
+            }
+        }) * point;
     }
     #endregion
 }

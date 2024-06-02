@@ -60,7 +60,7 @@ public class AA2_Rigidbody
             };
 
             linearVelocity = Vector3C.zero;
-            angularVelocity = new Vector3C(10.0f, 0.0f, 0.0f);
+            angularVelocity = new Vector3C(0.0f, 15.0f, 0.0f);
             linearAcceleration = Vector3C.zero;
 
             accelerationInit = false;
@@ -85,7 +85,7 @@ public class AA2_Rigidbody
         {
             for (int i = 0; i < originalVertices.Length; ++i)
             {
-                rotatedVertices[i] = MatrixC.RotationToVector(euler, originalVertices[i], position);
+                rotatedVertices[i] = MatrixC.RotationToVector(euler, originalVertices[i]);
             }
         }
 
@@ -129,5 +129,13 @@ public class AA2_Rigidbody
         }
     }
 
-    public void Debug() { }
+    public void Debug()
+    {
+        foreach (var vertex in crb.rotatedVertices)
+        {
+            SphereC sphere = new SphereC(vertex + crb.position, 0.01f);
+            sphere.Print(Vector3C.green);
+        }
+    }
+
 }
